@@ -5,6 +5,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const request = require('request');
+const axios = require('axios');
 const path = require('path');
 var messengerButton = "<html><head><title>Facebook Messenger Bot</title></head><body><h1>Facebook Messenger Bot</h1>This is a bot based on Messenger Platform QuickStart. For more details, see their <a href=\"https://developers.facebook.com/docs/messenger-platform/guides/quick-start\">docs</a>.<script src=\"https://button.glitch.me/button.js\" data-style=\"glitch\"></script><div class=\"glitchButton\" style=\"position:fixed;top:20px;right:20px;\"></div></body></html>";
 
@@ -92,7 +93,9 @@ function receivedMessage(event) {
       case 'generic':
         sendGenericMessage(senderID);
         break;
-
+      case 'Dinner suggestions':
+        sendQuestionOnGuests(senderID);
+        break;
       default:
         sendTextMessage(senderID, messageText);
     }
@@ -112,15 +115,81 @@ function receivedPostback(event) {
 
   console.log("Received postback for user %d and page %d with payload '%s' " + 
     "at %d", senderID, recipientID, payload, timeOfPostback);
+  let intPayload = Number.parseInt(payload);
+  
+  if (intPayload !== NaN){
+    sendDinnerSuggestion(senderID, intPayload);
+  } else {
 
-  // When a postback is called, we'll send a message back to the sender to 
-  // let them know it was successful
-  sendTextMessage(senderID, "Postback called");
+    // When a postback is called, we'll send a message back to the sender to 
+    // let them know it was successful
+    sendTextMessage(senderID, "Postback called with " + payload);
+  }
 }
 
 //////////////////////////
 // Sending helpers
 //////////////////////////
+
+function sendQuestionOnGuests(recipientId){
+  var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [{
+            title: "How many guests for dinner?",        
+            image_url: "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2Fautumn_leaves_PNG3601.png?1506212196498",
+            buttons: [{
+              type: "postback",
+              title: "Eight or less",
+              payload: "8"
+            }, {
+              type: "postback",
+              title: "More than eight",
+              payload: "10",
+            }],
+          }]
+        }
+      }
+    }
+  }
+  callSendAPI(messageData);
+}
+
+function sendDinnerSuggestion(recipientId, nbrOfGuests){
+  let messageData = {
+    "variables" : {
+        "guestCount" : { "value" : nbrOfGuests, "type" : "Integer" },
+                         "season" : { "value" : "Fall", "type" : "String" }
+                       }        
+  }
+  
+  let dinnerChoice = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      text: "Nada"
+    }
+  };;
+  
+  return axios.post('http://oarvt.mynetgear.com:8080/engine-rest/decision-definition/key/dish/evaluate', messageData)
+      .then(response => response.data)
+      .then(dishSelection => {
+        dinnerChoice.message.text = dishSelection[0].desiredDish.value;
+        callSendAPI(dinnerChoice);
+      })
+      .catch(error => {
+        console.error("Could not invoke decision rule.");
+        console.error(error);
+      })
+}
+
 function sendTextMessage(recipientId, messageText) {
   var messageData = {
     recipient: {

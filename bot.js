@@ -281,6 +281,8 @@ function sendNextTask(recipientId, processId) {
     if (taskInfo.length > 0){
     console.log("user request id is: ", taskInfo[0].id)
     console.log("task description is: ", taskInfo[0].name)
+      
+    let imageUrl = taskInfo[0].processDefinitionId.includes('stew') ? "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2FBeefStew.jpg?1506254336197" : "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2FSpareRibs.jpg?1506253844983"
     
     var messageData = {
     recipient: {
@@ -293,7 +295,7 @@ function sendNextTask(recipientId, processId) {
           template_type: "generic",
           elements: [{
             title: taskInfo[0].name,        
-            image_url: "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2Fautumn_leaves_PNG3601.png?1506212196498",
+            image_url: imageUrl,
             buttons: [{
               type: "postback",
               title: "Done",

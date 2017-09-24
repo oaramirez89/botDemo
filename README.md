@@ -11,6 +11,6 @@ To guide the user through the recipe, the bot invokes a Camunda BPM (Business Pr
 
 This is a proof of concept and the bot is coded to work only for the demo. It
 is not the author's intent to create a cooking bot, but only to demonstrate
-the we can have a bot interact with decision and workflow execution models.
+how a bot may interact with decision and workflow execution models.
 
 Oscar A. Ramirez

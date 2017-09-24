@@ -1,23 +1,16 @@
-# Facebook Messenger Bot
+# Fullstack Academy Stackathon Demo Messenger Bot
 
-This example project creates a Facebook Messenger bot, completely
-mirroring the quickstart located in [Messenger Platform docs](https://developers.facebook.com/docs/messenger-platform/guides/quick-start).
+This demo project creates a Facebook Messenger bot that demonstrates the 
+interaction between a bot and a Camunda Decision as well as a Workflow.
 
-It's an echo bot that responds to a user's message by repeating their message back to them. It also sends a generic template when a message with "generic" text is received. This project is not dependent on any external libraries and can easily be extended.
+The bot invokes a Camunda DMN (Decision Model Notation) model to suggest
+a dish to cook to the user. Once the dish is selected, the user is asked
+if they need guidance cooking the dish.
 
-![](https://cdn.glitch.com/ca73ace5-3fff-4b8f-81c5-c64452145271%2FmessengerBotGIF.gif)
+To guide the user through the recipe, the bot invokes a Camunda BPM (Business Process Model) model which maps the steps required to cook the selected dish.
 
-## Getting Started
-To get started you need to:
+This is a proof of concept and the bot is coded to work only for the demo. It
+is not the author's intent to create a cooking bot, but only to demonstrate
+the we can have a bot interact with decision and workflow execution models.
 
-- Set up your Facebook app on Facebook
-
-- Configure your Facebook App
-
-  The `Callback URL` you set when configuring your app on Facebook is your Glitch project's publish URL with '/webhook' appended. The publish URL is what loads when you click 'Show' and has the format 'https://project-name.glitch.me', so for this example we used 'https://messenger-bot.glitch.me/webhook' for the Callback URL.
-
-  The `Verify Token` is a string you make up - it's just used to make sure it is your Facebook app that your server is interacting with. 
-
-- Copy your app credentials into the `.env` file
-
-For more detailed setup instructions, see [Messenger Platform Quick Start](https://developers.facebook.com/docs/messenger-platform/guides/quick-start).
+Oscar A. Ramirez

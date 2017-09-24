@@ -169,7 +169,7 @@ function getDinnerSuggestion(recipientId, nbrOfGuests){
                        }        
   }
   
-  return axios.post('http://oarvt.mynetgear.com:8080/engine-rest/decision-definition/key/dish/evaluate', messageData)
+  return axios.post(process.env.CAMUNDA_HOME + '/engine-rest/decision-definition/key/dish/evaluate', messageData)
       .then(response => response.data)
       .then(dishSelection => {
         sendDinnerSuggestion(recipientId, dishSelection[0].desiredDish.value);

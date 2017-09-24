@@ -116,9 +116,9 @@ function receivedPostback(event) {
   console.log("Received postback for user %d and page %d with payload '%s' " + 
     "at %d", senderID, recipientID, payload, timeOfPostback);
   let intPayload = Number.parseInt(payload);
-  
-  if (intPayload !== NaN){
-    sendDinnerSuggestion(senderID, intPayload);
+  console.log('intPayload = ', intPayload)
+  if (intPayload === 8 || intPayload === 10) {
+    getDinnerSuggestion(senderID, intPayload);
   } else {
 
     // When a postback is called, we'll send a message back to the sender to 
@@ -161,7 +161,7 @@ function sendQuestionOnGuests(recipientId){
   callSendAPI(messageData);
 }
 
-function sendDinnerSuggestion(recipientId, nbrOfGuests){
+function getDinnerSuggestion(recipientId, nbrOfGuests){
   let messageData = {
     "variables" : {
         "guestCount" : { "value" : nbrOfGuests, "type" : "Integer" },
@@ -169,25 +169,83 @@ function sendDinnerSuggestion(recipientId, nbrOfGuests){
                        }        
   }
   
-  let dinnerChoice = {
-    recipient: {
-      id: recipientId
-    },
-    message: {
-      text: "Nada"
-    }
-  };;
-  
   return axios.post('http://oarvt.mynetgear.com:8080/engine-rest/decision-definition/key/dish/evaluate', messageData)
       .then(response => response.data)
       .then(dishSelection => {
-        dinnerChoice.message.text = dishSelection[0].desiredDish.value;
-        callSendAPI(dinnerChoice);
+        sendDinnerSuggestion(recipientId, dishSelection[0].desiredDish.value);
       })
       .catch(error => {
         console.error("Could not invoke decision rule.");
         console.error(error);
       })
+}
+
+function sendDinnerSuggestion(recipientId, desiredDish){
+  let messageToSend;
+  
+  switch (desiredDish) {
+    case 'Spareribs':
+      messageToSend = {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [{
+            title: "Barbequed Ribs",
+            subtitle: "Two day ribs, but worth the effort. Baked and marinated with a rub overnight, then grilled with barbecue sauce.",
+            item_url: "http://allrecipes.com/recipe/19856/barbequed-ribs/?internalSource=recipe%20hub&referringContentType=search%20results&clickId=cardslot%2040",               
+            image_url: "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2FSpareRibs.jpg?1506253844983",
+            buttons: [{
+              type: "web_url",
+              url: "http://allrecipes.com/recipe/19856/barbequed-ribs/?internalSource=recipe%20hub&referringContentType=search%20results&clickId=cardslot%2040",
+              title: "Open Web URL"
+            }, {
+              type: "postback",
+              title: "Help me cook it",
+              payload: "Spareribs",
+               }],
+            }]
+          }
+        }
+      }
+      break;
+    case 'Stew':
+      messageToSend = {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [{
+            title: "Beef Stew VI",
+            subtitle: "Thick beef stew good eaten from a bowl or poured over biscuits",
+            item_url: "http://allrecipes.com/recipe/25678/beef-stew-vi/?internalSource=hn_carousel%2001_Beef%20Stew&referringId=14730&referringContentType=recipe%20hub&referringPosition=carousel%2001",               
+            image_url: "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2FBeefStew.jpg?1506254336197",
+            buttons: [{
+              type: "web_url",
+              url: "http://allrecipes.com/recipe/25678/beef-stew-vi/?internalSource=hn_carousel%2001_Beef%20Stew&referringId=14730&referringContentType=recipe%20hub&referringPosition=carousel%2001",
+              title: "Open Web URL"
+            }, {
+              type: "postback",
+              title: "Help me cook it",
+              payload: "Stew",
+               }],
+            }]
+          }
+        }
+      }
+      break;
+    default:
+      messageToSend = { text: desiredDish}
+  }
+  
+  let messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: messageToSend
+  };;
+  
+  callSendAPI(messageData);
 }
 
 function sendTextMessage(recipientId, messageText) {

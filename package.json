@@ -19,8 +19,9 @@
   "license": "MIT",
   "homepage": "https://developers.facebook.com/docs/messenger-platform/guides/quick-start",
   "dependencies": {
-    "request": "^2.72.0",
+    "axios": "^0.16.2",
+    "body-parser": "*",
     "express": "*",
-    "body-parser": "*"
+    "request": "^2.72.0"
   }
 }

@@ -1,5 +1,5 @@
 //
-// This is main file containing code implementing the Express server and functionality for the Express echo bot.
+// This is main file containing code implementing the Express server and functionality for the demo bot.
 //
 'use strict';
 const express = require('express');
@@ -112,18 +112,27 @@ function receivedPostback(event) {
   // The 'payload' param is a developer-defined field which is set in a postback 
   // button for Structured Messages. 
   var payload = event.postback.payload;
+  var buttonTitle = event.postback.title;
 
   console.log("Received postback for user %d and page %d with payload '%s' " + 
     "at %d", senderID, recipientID, payload, timeOfPostback);
+  
+  console.log('button title is: ', buttonTitle);
+  
   let intPayload = Number.parseInt(payload);
-  console.log('intPayload = ', intPayload)
+  
   if (intPayload === 8 || intPayload === 10) {
     getDinnerSuggestion(senderID, intPayload);
   } else {
-
-    // When a postback is called, we'll send a message back to the sender to 
-    // let them know it was successful
-    sendTextMessage(senderID, "Postback called with " + payload);
+    if (payload === 'Stew' || payload === 'Spareribs') {
+      startWorkflow(senderID, payload)
+    } else if (buttonTitle === "Done"){
+      moveWorkflowAlong(senderID, payload)
+    } else {
+      // When a postback is called, we'll send a message back to the sender to 
+      // let them know it was successful
+      sendTextMessage(senderID, "Postback called with " + payload);
+    }
   }
 }
 
@@ -169,15 +178,15 @@ function getDinnerSuggestion(recipientId, nbrOfGuests){
                        }        
   }
   
-  return axios.post(process.env.CAMUNDA_HOME + '/engine-rest/decision-definition/key/dish/evaluate', messageData)
-      .then(response => response.data)
-      .then(dishSelection => {
-        sendDinnerSuggestion(recipientId, dishSelection[0].desiredDish.value);
-      })
-      .catch(error => {
-        console.error("Could not invoke decision rule.");
-        console.error(error);
-      })
+  axios.post(process.env.CAMUNDA_HOME + '/engine-rest/decision-definition/key/dish/evaluate', messageData)
+  .then(response => response.data)
+  .then(dishSelection => {
+    sendDinnerSuggestion(recipientId, dishSelection[0].desiredDish.value);
+  })
+  .catch(error => {
+    console.error("Could not invoke decision rule.");
+    console.error(error);
+  })
 }
 
 function sendDinnerSuggestion(recipientId, desiredDish){
@@ -246,6 +255,84 @@ function sendDinnerSuggestion(recipientId, desiredDish){
   };;
   
   callSendAPI(messageData);
+}
+
+function startWorkflow(recipientId, payload) {
+  // Start workflow, embed the process Id in the payload
+  let model = payload.toLowerCase();
+  axios.post(process.env.CAMUNDA_HOME + '/engine-rest/process-definition/key/cook-' + model + '/start', {"businessKey": "cook" + payload})
+  .then(response => response.data)
+  .then(processInfo => {
+    console.log("process id is: ", processInfo.id)
+    sendNextTask(recipientId, processInfo.id)
+  })
+  .catch(error => {
+    console.error("Could not start workflow.");
+    console.error(error);
+  })
+  
+}
+
+function sendNextTask(recipientId, processId) {
+  
+  axios.get(process.env.CAMUNDA_HOME + '/engine-rest/task/?processInstanceId=' + processId)
+  .then(response => response.data)
+  .then(taskInfo => {
+    if (taskInfo.length > 0){
+    console.log("user request id is: ", taskInfo[0].id)
+    console.log("task description is: ", taskInfo[0].name)
+    
+    var messageData = {
+    recipient: {
+      id: recipientId
+    },
+    message: {
+      attachment: {
+        type: "template",
+        payload: {
+          template_type: "generic",
+          elements: [{
+            title: taskInfo[0].name,        
+            image_url: "https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2Fautumn_leaves_PNG3601.png?1506212196498",
+            buttons: [{
+              type: "postback",
+              title: "Done",
+              payload: processId + '|' + taskInfo[0].id
+              }],
+            }]
+          }
+        }
+      }
+    }
+    callSendAPI(messageData);
+    } else {
+      sendTextMessage(recipientId, "You are done!!!")
+    }
+  })
+  .catch(error => {
+    console.error("Could not complete next task in workflow.");
+    console.error(error);
+  })
+  
+}
+
+function moveWorkflowAlong(recipientId, payload) {
+  let inputs = payload.split('|');
+  let taskId = inputs[1];
+  let processId = inputs[0]
+  
+  axios.post(process.env.CAMUNDA_HOME + '/engine-rest/task/' + taskId + '/complete', {
+            headers: {
+                'accept': 'application/json',
+                'accept-language': 'en_US',
+                'content-type': 'application/x-www-form-urlencoded'
+            }})
+  .then(() => {
+    console.log('Succesful completion of task.')
+    sendNextTask(recipientId, processId);
+  })
+  .catch(error => console.error(error))
+  
 }
 
 function sendTextMessage(recipientId, messageText) {

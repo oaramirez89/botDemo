@@ -25,6 +25,12 @@ Once the dish is selected the dish key is used to look up the appropriate recipe
 
 REST calls are used to interact with the workflow server. Bot starts the workflow using the process definition key. Bot renders each step by querying for the next User Task for the active process. When user tells the bot it is done with that step, the bot completes the task.
 
+When no more user tasks exist, bot sends a 'You are done!' text. 
+
 ![alt text](https://cdn.glitch.com/09c5fb51-1714-474d-bcca-ccede5088c33%2FScreen%20Shot%202017-09-24%20at%203.34.58%20PM.png?1506281732531 "Bot in action.")
 
-When no more user tasks exist, bot sends a 'You are done!' text.
+The video link below goes over a quick demo of the functionality included in this repo.
+
+[Bot Demo](https://youtu.be/yprUvUCE2iU)
+
+

@@ -1,4 +1,4 @@
-# Fullstack Academy Stackathon Demo Messenger Bot
+# Demo Messenger Bot
 
 This demo project creates a Facebook Messenger bot that demonstrates the 
 interaction between a bot and a Camunda Decision as well as a Workflow.
